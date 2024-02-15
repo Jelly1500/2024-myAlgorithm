@@ -1,0 +1,101 @@
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+// Function to preprocess the input string
+// 입력받은 문자열을 전처리하는 함수
+// Perform preprocessing to remove all spaces included in the string
+// 문자열에 포함된 모든 공백을 제거하는 전처리 과정을 수행
+// Also, change all strings to lowercase to further preprocess them to avoid disruption in string searches.
+// 또한 문자열을 모두 소문자로 바꾸어, 문자열 검색에 차질이 없도록 추가로 전처리하기
+string eraseSpace(const string& input) {
+    vector<char> buffer;
+    for(int i = 0; i < input.size(); i++) {
+        if(input[i] != ' ') {
+            char c = input[i];
+            if(c >= 'A' && c <= 'Z') {
+                c += 'a'-'A';
+            } 
+            buffer.push_back(c);
+        }
+    }
+    string ret(buffer.begin(), buffer.end());
+    
+    return ret;
+}
+
+// Function to create a partial match table
+// 부분일치 테이블을 생성하는 함수
+vector<int> getPartialMatch(const string& N) {
+    int m = N.size();
+    vector<int> pi(m, 0);
+    // begin = 시작 위치, matched =  일치하는 문자열의 길이
+    int begin = 1, matched = 0;
+    // kmp algorithm
+    while(begin + matched < m) {
+        if(N[begin + matched] == N[matched]) {
+            matched++;
+            pi[begin + matched - 1] = matched;
+        } else {
+            if(matched == 0) begin++;
+            else {
+                begin += matched - pi[matched - 1];
+                matched = pi[matched - 1];
+            }
+        }
+    }
+    
+    return pi;
+}
+
+// kmp string search function to check whether the first string N is included in H
+// 첫번째 문자열 N이 H에 포함되는지를 확인하는 kmp 문자열 검색 함수
+// If string N included string H, returns true immediately.
+// N이 H에 포함된다면 즉시 true를 반환.
+// Returns false immediately after the loop ends.
+// 반복문이 끝나면 즉시 false를 반환.
+bool kmpSearch(const string& H, const string& N) {
+    int n = H.size(), m = N.size();
+    vector<int> ret;
+    //pi[i] = Maximum length of substring that can be a suffix or prefix of N[...i]
+    //pi[i] = N[...i]의 접미사도 되고, 접두사도 되는 부분 문자열의 최대 길이
+    vector<int> pi = getPartialMatch(N);
+    int begin = 0;
+    int matched = 0;
+    while(begin <= n - m) {
+        // When comparing strings, if the characters match each other,
+        // 문자열 비교시 서로 일치하는 문자일 때,
+        if(matched < m && H[begin + matched] == N[matched]) {
+            matched++;
+            if(matched == m) {
+                return true;
+            }
+        } else { // 문자 불일치가 일어났을 때 (When a character mismatch occurs)
+            if(matched == 0) {
+                begin++;
+            } else {
+                begin += matched - pi[matched-1];
+                matched = pi[matched-1];
+            }
+        }
+    }
+    return false;
+}
+
+int main()
+{
+    string search, dbStr;
+    getline(cin, search);
+    getline(cin, dbStr);
+    string searchNoSp = eraseSpace(search);
+    string dbStrNosp = eraseSpace(dbStr);
+    if(kmpSearch(dbStrNosp, searchNoSp)) {
+        cout << "True";
+    } else {
+        cout << "False";
+    }
+
+    return 0;
+}
