@@ -1,0 +1,117 @@
+#include <iostream>
+#include <vector>
+
+using namespace std;
+
+// 가장 단순한 이진 검색 트리 구현
+// 균형 문제를 해결하지 못하였음
+// 삽입, 검색, 삭제 기능 구현
+// 트리 내부 구초 출력함수 print()는 트리를 중위 순회함
+
+typedef int KeyType;
+
+struct BinaryTree {
+    KeyType key;
+    BinaryTree* left=nullptr;
+    BinaryTree* right=nullptr;
+    BinaryTree(int key) {
+        this->key = key;
+    }
+    
+    void initLeft(BinaryTree* left) {
+        this->left = left;
+    }
+    void initRight(BinaryTree* right) {
+        this->right = right;
+    }
+    
+    void print() {
+        if (this == nullptr)
+            return;
+        cout << this->key << " ";
+        if (this->left != nullptr) this->left->print();
+        if (this->right != nullptr) this->right->print();
+    }
+    
+    BinaryTree* search(KeyType key) {
+        if(this == nullptr || this->key == key) return this;
+        else if(this->key > key) {
+            return this->left->search(key);
+        } 
+        else {
+            return this->right->search(key);
+        }
+    }
+    
+    KeyType upper_bound(KeyType key) {
+        BinaryTree* point = search(key);
+        while(point->left != nullptr) {
+            point = point->left;
+        }
+        return point->key;
+    }
+    
+    void insert(KeyType key) {
+        if(key == this->key) {
+            cout << key << " is already exist...\n";
+            return;
+        }
+        else if(this->key < key) {
+            if(this->right == nullptr) {
+                this->initRight(new BinaryTree(key));
+                cout << key << " is inserted!\n";
+                return;
+            }
+            this->right->insert(key);
+        } 
+        else {
+            if(this->left == nullptr) {
+                this->initLeft(new BinaryTree(key));
+                cout << key << " is inserted!\n";
+                return;
+            }
+            this->left->insert(key);
+        }
+    }
+    
+    void mergeLeft(BinaryTree* LR) {
+        if(this->left == nullptr) {
+            this->left = LR;
+            return;
+        }
+        this->left->mergeLeft(LR);
+    }
+    
+    void deleteKey(KeyType key) {
+        if(key == this->key) {
+            this->key = this->left->key;
+            this->right->mergeLeft(this->left->right);
+            this->left = this->left->left;
+            cout << key << " is deleted!\n";
+            return;
+        }
+        else if(key > this->key) {
+            this->right->deleteKey(key);
+        } else {
+            this->left->deleteKey(key);
+        }
+    }
+    
+};
+
+
+
+int main()
+{
+    BinaryTree root(31);
+    root.insert(17);
+    root.insert(72);
+    root.insert(55);
+    root.insert(82);
+    root.insert(49);
+    root.insert(69);
+    root.deleteKey(72);
+    root.print();
+
+    return 0;
+}
