@@ -10,108 +10,94 @@ using namespace std;
 
 typedef int KeyType;
 
-struct BinaryTree {
+struct Node {
     KeyType key;
-    BinaryTree* left=nullptr;
-    BinaryTree* right=nullptr;
-    BinaryTree(int key) {
-        this->key = key;
-    }
+    Node* left;
+    Node* right;
     
-    void initLeft(BinaryTree* left) {
+    Node(KeyType _key) : key(_key), left(nullptr), right(nullptr) {}
+    
+    void setLeft(Node* left) {
         this->left = left;
     }
-    void initRight(BinaryTree* right) {
+    void setRight(Node* right) {
         this->right = right;
-    }
-    
-    void print() {
-        if (this == nullptr)
-            return;
-        cout << this->key << " ";
-        if (this->left != nullptr) this->left->print();
-        if (this->right != nullptr) this->right->print();
-    }
-    
-    BinaryTree* search(KeyType key) {
-        if(this == nullptr || this->key == key) return this;
-        else if(this->key > key) {
-            return this->left->search(key);
-        } 
-        else {
-            return this->right->search(key);
-        }
-    }
-    
-    KeyType upper_bound(KeyType key) {
-        BinaryTree* point = search(key);
-        while(point->left != nullptr) {
-            point = point->left;
-        }
-        return point->key;
-    }
-    
-    void insert(KeyType key) {
-        if(key == this->key) {
-            cout << key << " is already exist...\n";
-            return;
-        }
-        else if(this->key < key) {
-            if(this->right == nullptr) {
-                this->initRight(new BinaryTree(key));
-                cout << key << " is inserted!\n";
-                return;
-            }
-            this->right->insert(key);
-        } 
-        else {
-            if(this->left == nullptr) {
-                this->initLeft(new BinaryTree(key));
-                cout << key << " is inserted!\n";
-                return;
-            }
-            this->left->insert(key);
-        }
-    }
-    
-    void mergeLeft(BinaryTree* LR) {
-        if(this->left == nullptr) {
-            this->left = LR;
-            return;
-        }
-        this->left->mergeLeft(LR);
-    }
-    
-    void deleteKey(KeyType key) {
-        if(key == this->key) {
-            this->key = this->left->key;
-            this->right->mergeLeft(this->left->right);
-            this->left = this->left->left;
-            cout << key << " is deleted!\n";
-            return;
-        }
-        else if(key > this->key) {
-            this->right->deleteKey(key);
-        } else {
-            this->left->deleteKey(key);
-        }
     }
     
 };
 
+void print(Node* root) {
+    if(root == nullptr) return;
+    print(root->left);
+    cout << root->key << " ";
+    print(root->right);
+}
 
+Node* insert(Node* root, Node* node) {
+    if(root == nullptr) return node;
+    if(root->key == node->key) {
+        cout << node->key << " is already exist...\n";
+        return root;
+    } else if(root->key < node->key) {
+        root->setRight(insert(root->right, node));
+    } else {
+        root->setLeft(insert(root->left, node));
+    }
+    
+    return root;
+}
+
+Node* mergeLRSub(Node* root, Node* LRSub) {
+    if(root->left == nullptr) {
+        root->setLeft(LRSub);
+        return root;
+    }
+    root->setLeft(mergeLRSub(root->left, LRSub));
+    return root;
+}
+
+Node* deleteKey(Node* root, KeyType key) {
+    if(root == nullptr) {
+        cout << key << " isn't exist...\n";
+        return root;
+    }
+    if(root->key == key) {
+        // find key node! let's delete it!
+        if(root->left == nullptr && root->right == nullptr) {
+            return nullptr;
+        } else if(root->left != nullptr && root->right == nullptr) {
+            return root->left;
+        } else if(root->left == nullptr && root->right != nullptr) {
+            return root->right;
+        } else {
+            // root를 기준으로 항상 left에 있는 node를 root로 대체함
+            // 1. key값 변경
+            root->key = root->left->key;
+            // 2. root->left->right 서브트리를 root->right의 서브트리에서 가장 작은 key를 가진 node의 left에 넣기
+            root->setRight(mergeLRSub(root->right, root->left->right));
+            // 3. root->left 를 변경
+            root->setLeft(root->left->left);
+        }
+    }
+    else if(root->key < key) {
+        root->setRight(deleteKey(root->right, key));
+    } else {
+        root->setLeft(deleteKey(root->left, key));
+    }
+    return root;
+}
 
 int main()
 {
-    BinaryTree root(31);
-    root.insert(17);
-    root.insert(72);
-    root.insert(55);
-    root.insert(82);
-    root.insert(49);
-    root.insert(69);
-    root.deleteKey(72);
-    root.print();
+    Node root(17);
+    insert(&root, new Node(8));
+    insert(&root, new Node(4));
+    insert(&root, new Node(13));
+    insert(&root, new Node(30));
+    insert(&root, new Node(24));
+    insert(&root, new Node(36));
+    deleteKey(&root, 17);
+    print(&root);
 
     return 0;
 }
