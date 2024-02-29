@@ -23,7 +23,6 @@ struct Node {
     void setRight(Node* right) {
         this->right = right;
     }
-    
 };
 
 void print(Node* root) {
@@ -56,28 +55,26 @@ Node* mergeLRSub(Node* root, Node* LRSub) {
     return root;
 }
 
+// node를 삭제할 때, 힙 영역 메모리 할당 해제 구현
 Node* deleteKey(Node* root, KeyType key) {
     if(root == nullptr) {
         cout << key << " isn't exist...\n";
         return root;
     }
     if(root->key == key) {
+        Node* toDelete = root;
         // find key node! let's delete it!
-        if(root->left == nullptr && root->right == nullptr) {
-            return nullptr;
-        } else if(root->left != nullptr && root->right == nullptr) {
-            return root->left;
-        } else if(root->left == nullptr && root->right != nullptr) {
-            return root->right;
+        if(root->left == nullptr) {
+            root = root->right;
+        } else if(root->right == nullptr) {
+            root = root->left;
         } else {
-            // root를 기준으로 항상 left에 있는 node를 root로 대체함
-            // 1. key값 변경
-            root->key = root->left->key;
-            // 2. root->left->right 서브트리를 root->right의 서브트리에서 가장 작은 key를 가진 node의 left에 넣기
-            root->setRight(mergeLRSub(root->right, root->left->right));
-            // 3. root->left 를 변경
-            root->setLeft(root->left->left);
+            Node* temp = root->left;
+            root->setRight(mergeLRSub(root->right, temp->right));
+            temp->setRight(root->right);
+            root = temp;
         }
+        delete toDelete;
     }
     else if(root->key < key) {
         root->setRight(deleteKey(root->right, key));
@@ -96,7 +93,7 @@ int main()
     insert(&root, new Node(30));
     insert(&root, new Node(24));
     insert(&root, new Node(36));
-    deleteKey(&root, 17);
+    deleteKey(&root, 30);
     print(&root);
 
     return 0;
